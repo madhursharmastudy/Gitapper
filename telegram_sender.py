@@ -1,6 +1,6 @@
 """
-Runs after main.py finishes. Sends the JSON/CSV/PDF files it produced for
-each processed topic back to the Telegram chat that requested them.
+Runs after main.py finishes. Sends the JSON file it produced for each
+processed topic back to the Telegram chat that requested them.
 """
 import json
 import os
@@ -61,13 +61,10 @@ def main():
 
     for topic in topics:
         name = _topic_filename(topic)
-        sent_any = False
-        for ext in ("json", "csv", "pdf"):
-            path = os.path.join(config.OUTPUT_DIR, f"{name}.{ext}")
-            if os.path.exists(path):
-                send_document(token, chat_id, path)
-                sent_any = True
-        if not sent_any:
+        path = os.path.join(config.OUTPUT_DIR, f"{name}.json")
+        if os.path.exists(path):
+            send_document(token, chat_id, path)
+        else:
             send_message(token, chat_id, f"'{topic}' ke liye koi result nahi mila.")
 
     send_message(token, chat_id, "Scraping complete.")
