@@ -5,4 +5,3 @@ pydantic>=2.0
 pdfplumber
 pytesseract
 pdf2image
-fpdf2
