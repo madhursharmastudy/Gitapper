@@ -1,0 +1,53 @@
+name: Telegram Scraper
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # checks Telegram every 10 minutes
+  workflow_dispatch:          # lets you also trigger it manually from GitHub
+
+permissions:
+  contents: write            # needed so the workflow can save state.json back to the repo
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Tesseract OCR (Hindi + Sanskrit + English)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-hin tesseract-ocr-san
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check Telegram for a new topic
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python telegram_listener.py
+
+      - name: Run the scraper
+        if: env.NEW_TOPIC == 'true'
+        run: python main.py --batch topics.txt
+
+      - name: Send results back to Telegram
+        if: env.NEW_TOPIC == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python telegram_sender.py
+
+      - name: Save Telegram read-position
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git diff --staged --quiet || git commit -m "Update telegram offset"
+          git push
