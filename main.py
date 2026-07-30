@@ -9,7 +9,6 @@ from extractor import extract
 from classifier import classify_type
 from validator import build_entry
 from storage.json_writer import save_json
-from storage.export_writer import save_csv, save_pdf
 from analytics import log_topic_result
 
 
@@ -77,17 +76,9 @@ def save_topic_output(topic, entries):
     name = _topic_filename(topic)
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
     json_path = os.path.join(config.OUTPUT_DIR, f"{name}.json")
-    csv_path  = os.path.join(config.OUTPUT_DIR, f"{name}.csv")
-    pdf_path  = os.path.join(config.OUTPUT_DIR, f"{name}.pdf")
 
     total = save_json(entries, json_path)
     print(f"    [JSON] saved ({total} records) -> {json_path}")
-
-    save_csv(entries, csv_path)
-    print(f"    [CSV] saved -> {csv_path}")
-
-    save_pdf(entries, pdf_path)
-    print(f"    [PDF] saved -> {pdf_path}")
 
 
 def run(topics):
